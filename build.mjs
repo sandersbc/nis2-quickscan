@@ -11,7 +11,9 @@ import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 
 const GATE_DEV_DEFAULT = 'enabled: false';
 const JSX_FILES = ['assets/nis2-data.jsx', 'assets/wizard-app.jsx'];
-const COPY_FILES = ['assets/tokens.css', 'assets/wizard.css', 'assets/dxfferent-theme.css', 'assets/intake-config.json'];
+// staticwebapp.config.json hoort in de root van het geüploade artefact: Azure
+// Static Web Apps leest het daar, en leest géén .htaccess of _headers.
+const COPY_FILES = ['assets/tokens.css', 'assets/wizard.css', 'assets/dxfferent-theme.css', 'assets/intake-config.json', 'staticwebapp.config.json'];
 const COPY_DIRS = ['assets/fonts'];
 // De UMD-bundels dragen alleen een copyrightregel die naar een LICENSE-bestand
 // verwijst; MIT eist dat de permission notice zelf meegeleverd wordt. Die

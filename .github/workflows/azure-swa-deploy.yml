@@ -1,0 +1,42 @@
+name: Deploy naar Azure Static Web Apps
+
+# Deze fork wordt gehost op Azure Static Web Apps (Free). De build blijft de
+# eigen `npm run build`: Oryx zou anders zijn eigen buildstap draaien en de
+# vendor-/gate-logica uit build.mjs overslaan, vandaar skip_app_build.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swa-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: node tests/engine-smoke.mjs
+      - run: npm run build
+      - name: dist mag geen dev/CDN-referenties bevatten
+        run: "! grep -r 'unpkg\\|text/babel' dist/"
+      # Vastgezet op de commit-SHA van v1: deze stap krijgt het deployment-token,
+      # en een verplaatsbare tag zou een derde partij daar toegang toe geven.
+      - name: Upload naar Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: dist
+          api_location: ""
+          output_location: ""
+          skip_app_build: true
+          skip_api_build: true
