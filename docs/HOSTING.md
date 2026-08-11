@@ -71,11 +71,33 @@ server {
 vervangen, dus het moet altijd gerevalideerd worden. `no-cache` levert dan een
 304 in plaats van de volle ~105 KB opnieuw. Gebruik hier dus geen `no-store`.
 
+## Azure Static Web Apps
+
+De site past op de **Free**-tier: 0,6 MB van de 250 MB per deploy, 100 GB
+bandbreedte per maand, gratis SSL. Kosten: €0.
+
+```bash
+az group create -n nis2-quickscan-rg -l westeurope
+az staticwebapp create -n nis2-quickscan -g nis2-quickscan-rg -l westeurope --sku Free
+az staticwebapp secrets list -n nis2-quickscan -g nis2-quickscan-rg --query properties.apiKey -o tsv
+```
+
+Zet dat deployment-token als repository-secret `AZURE_STATIC_WEB_APPS_API_TOKEN`;
+`.github/workflows/azure-swa-deploy.yml` bouwt bij elke push naar `main` en
+uploadt `dist/`.
+
+Azure leest **noch** `.htaccess` **noch** `_headers`. De headers staan daarom
+ook in `staticwebapp.config.json` (repo-root), die `build.mjs` naar `dist/`
+kopieert — Azure verwacht het bestand in de root van het geüploade artefact.
+Wijzigt u de headers, wijzig ze dan op **drie** plaatsen: `build.mjs`
+(`.htaccess` + `_headers`) en `staticwebapp.config.json`.
+
 ## Security headers
 
 De build genereert deze headers al voor twee hostvarianten: `dist/.htaccess`
 (Apache/SiteGround) en `dist/_headers` (Cloudflare Pages). Draait u nginx, neem
-dan het blok hierboven over — nginx leest geen van beide bestanden.
+dan het blok hierboven over — nginx leest geen van beide bestanden. Azure
+Static Web Apps leest `staticwebapp.config.json`; zie de sectie hierboven.
 
 `frame-ancestors 'self'` is er voor de lead-gate: die vraagt een e-mailadres, en
 zonder deze header kan elke derde de pagina in een iframe zetten en de gate
